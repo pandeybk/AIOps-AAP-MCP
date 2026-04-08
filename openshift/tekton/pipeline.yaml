@@ -1,0 +1,44 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: aap-mcp-container-build
+spec:
+  params:
+    - name: git-url
+      type: string
+    - name: git-revision
+      type: string
+      default: main
+    - name: output-image
+      type: string
+  workspaces:
+    - name: source
+  tasks:
+    - name: clone
+      taskRef:
+        name: aap-mcp-git-clone
+      params:
+        - name: URL
+          value: $(params.git-url)
+        - name: REVISION
+          value: $(params.git-revision)
+        - name: DELETE_EXISTING
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: source
+    - name: build-aap-mcp-server
+      runAfter:
+        - clone
+      taskRef:
+        name: aap-mcp-buildah
+      params:
+        - name: IMAGE
+          value: $(params.output-image)
+        - name: CONTEXT
+          value: AAP-MCP-Server
+        - name: DOCKERFILE
+          value: AAP-MCP-Server/Dockerfile
+      workspaces:
+        - name: source
+          workspace: source

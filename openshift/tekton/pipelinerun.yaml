@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: aap-mcp-build-
+spec:
+  pipelineRef:
+    name: aap-mcp-container-build
+  params:
+    - name: git-url
+      value: https://github.com/pandeybk/AIOps-AAP-MCP.git
+    - name: git-revision
+      value: main
+    - name: output-image
+      value: image-registry.openshift-image-registry.svc:5000/ims-demo-lab/aap-mcp-server:latest
+  taskRunTemplate:
+    serviceAccountName: pipeline
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi

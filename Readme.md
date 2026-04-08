@@ -14,6 +14,8 @@ The solution automates detection, analysis, notification, and remediation of nod
 This fork also includes a Kafka-driven playbook bridge for external incident platforms.
 It consumes plain-text instructions from the `aiops-ansible-playbook-generate-instruction` topic, runs the Ansible Lightspeed generation template in AAP, and posts the generated playbook YAML back to the requesting control plane callback URL.
 
+The OpenShift manifests in `openshift/tekton` can now build the `AAP-MCP-Server` image inside the cluster and publish it to the internal registry, mirroring the in-cluster container build flow used in the IMS demo repo.
+
 ---
 
 ## ⚙️ Workflow

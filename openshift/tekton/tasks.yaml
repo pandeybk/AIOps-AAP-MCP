@@ -1,0 +1,108 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: aap-mcp-git-clone
+spec:
+  params:
+    - name: URL
+      type: string
+    - name: REVISION
+      type: string
+      default: main
+    - name: DELETE_EXISTING
+      type: string
+      default: "true"
+  results:
+    - name: COMMIT
+      type: string
+    - name: URL
+      type: string
+    - name: COMMITTER_DATE
+      type: string
+  workspaces:
+    - name: output
+  steps:
+    - name: clone
+      image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:800678e319e2c32d73acde7862ec9e7803a8c9210597ef4e99ea324945e89447
+      workingDir: $(workspaces.output.path)
+      computeResources:
+        requests:
+          cpu: 1m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        export HOME=/tmp/git-home
+        mkdir -p "$HOME"
+        git config --global --add safe.directory "$(workspaces.output.path)"
+        if [ "$(params.DELETE_EXISTING)" = "true" ]; then
+          rm -rf "$(workspaces.output.path)"/* "$(workspaces.output.path)"/.[!.]* "$(workspaces.output.path)"/..?* || true
+        fi
+        git init .
+        git remote add origin "$(params.URL)"
+        git fetch --depth 1 origin "$(params.REVISION)"
+        git checkout FETCH_HEAD
+        git rev-parse HEAD | tr -d '\n' | tee "$(results.COMMIT.path)"
+        printf '%s' "$(params.URL)" | tee "$(results.URL.path)"
+        git log -1 --format=%ct | tr -d '\n' | tee "$(results.COMMITTER_DATE.path)"
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: aap-mcp-buildah
+spec:
+  params:
+    - name: IMAGE
+      type: string
+    - name: DOCKERFILE
+      type: string
+      default: ./Dockerfile
+    - name: CONTEXT
+      type: string
+      default: .
+    - name: STORAGE_DRIVER
+      type: string
+      default: vfs
+    - name: TLS_VERIFY
+      type: string
+      default: "true"
+  results:
+    - name: IMAGE_URL
+      type: string
+    - name: IMAGE_DIGEST
+      type: string
+  workspaces:
+    - name: source
+  steps:
+    - name: build-and-push
+      image: registry.redhat.io/rhel9/buildah@sha256:4e604d18fc609d25b2fc99814281944acaac78e8cd5e47b8359709b8b505db86
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        capabilities:
+          add:
+            - SETFCAP
+      computeResources:
+        requests:
+          cpu: 1m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+        buildah --storage-driver="$(params.STORAGE_DRIVER)" \
+          bud \
+          --tls-verify="$(params.TLS_VERIFY)" \
+          --file "$(params.DOCKERFILE)" \
+          --tag "$(params.IMAGE)" \
+          "$(params.CONTEXT)"
+        buildah --storage-driver="$(params.STORAGE_DRIVER)" \
+          push \
+          --tls-verify="$(params.TLS_VERIFY)" \
+          --digestfile /tmp/image-digest \
+          "$(params.IMAGE)" \
+          "docker://$(params.IMAGE)"
+        printf '%s' "$(params.IMAGE)" | tee "$(results.IMAGE_URL.path)"
+        cat /tmp/image-digest | tr -d '\n' | tee "$(results.IMAGE_DIGEST.path)"

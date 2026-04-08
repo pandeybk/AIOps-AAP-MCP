@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: aap-playbook-bridge
-        image: quay.io/pandeybk/aap-mcp-server:latest
+        image: aap-mcp-server:latest
         imagePullPolicy: Always
         command:
         - python

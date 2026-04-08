@@ -43,8 +43,24 @@ with default values
         In your terminal, run the following command to create a new project:
 
             oc new-project llama-serve
-        
-    2. Deploy AAP MCP server
+
+    2. Build the AAP MCP image in-cluster with Tekton
+
+          - Navigate to the `openshift` directory.
+          - Apply the Tekton tasks, service account, RBAC, pipeline, and `ImageStream`:
+
+                oc apply -k tekton
+
+          - Start a build from the forked repository:
+
+                oc create -f tekton/pipelinerun.yaml
+
+          - The sample `PipelineRun` writes the image to `image-registry.openshift-image-registry.svc:5000/ims-demo-lab/aap-mcp-server:latest`.
+          - In the IMS demo namespace, the sample run reuses the existing `pipeline` service account, matching the main repo's Tekton flow.
+          - If you are deploying into a different project, update `tekton/pipelinerun.yaml` before creating it.
+          - Both the `aap-mcp` deployment and the Kafka playbook bridge now consume the in-cluster-built `aap-mcp-server:latest` image.
+
+    3. Deploy AAP MCP server
        
           - Navigate to the `openshift` directory where your deployment files are located.
 
@@ -65,7 +81,7 @@ with default values
                  -   `EDA_URL: https://<your-aap-server>/api/eda/v1`
                  -   `EDA_TOKEN`
 
-    3. Deploy the Kafka playbook bridge
+    4. Deploy the Kafka playbook bridge
 
           - Navigate to the `openshift` directory in your terminal.
           - Apply the bridge resources:
@@ -85,7 +101,7 @@ with default values
           - The worker listens for plain-text instructions on Kafka, launches the Lightspeed generation template in AAP, and posts either a `generated` or `failed` callback to the control plane URL embedded in each message.
 
 
-    4. Deploy LLamaStack 
+    5. Deploy LLamaStack 
 
     
          1.  **Verify Pod Status**: Before you begin, ensure that the `aap-mcp` pod is up and in a `Running` state.
@@ -106,7 +122,7 @@ with default values
                 -   Obtain a token from your MaaS (Model as a Service) by visiting the provided URL.
                 -   Update the token for the `llama-3b` model within the `llama-secret` file.
            
-    5. Deploy Streamlit (LLamaStack UI)
+    6. Deploy Streamlit (LLamaStack UI)
 
     
          1.  **Verify Pod Status**: Before you begin, ensure that the `llamastack-deployment` pod is up and in a `Running` state.
