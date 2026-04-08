@@ -2,6 +2,23 @@
 
 A comprehensive Model Context Protocol (MCP) server suite for Red Hat's automation and infrastructure ecosystem, enabling AI assistants to interact with Ansible Automation Platform (AAP), Event-Driven Ansible (EDA), ansible-lint code quality tools, and Red Hat's official documentation with secure domain validation.
 
+## Kafka Playbook Bridge
+
+This fork adds `playbook_bridge.py`, a worker that consumes plain-text instructions from Kafka, launches the configured Ansible Lightspeed generation template in AAP, and posts the generated playbook YAML back to the callback URL embedded in the message.
+
+Run it with:
+
+```bash
+python playbook_bridge.py
+```
+
+Required runtime configuration:
+
+- `AAP_URL` or `AAP_CONTROLLER_URL`
+- `AAP_TOKEN` or `AAP_USERNAME` plus `AAP_PASSWORD`
+- `KAFKA_BOOTSTRAP_SERVERS`
+- `CONTROL_PLANE_API_KEY`
+
 ## Features
 
 ### Ansible Automation Platform (AAP) Integration
@@ -47,7 +64,7 @@ A comprehensive Model Context Protocol (MCP) server suite for Red Hat's automati
 - Python 3.11 or higher
 - UV package manager (recommended) or pip
 - Access to an Ansible Automation Platform instance
-- Valid AAP API token
+- Valid AAP API token or controller username/password
 
 ### Setup
 
@@ -77,6 +94,16 @@ A comprehensive Model Context Protocol (MCP) server suite for Red Hat's automati
    # Optional for Red Hat Customer Portal access
    export REDHAT_USERNAME="your-redhat-username"
    export REDHAT_PASSWORD="your-redhat-password"
+   ```
+
+   For `playbook_bridge.py`, you can also use controller username/password instead of a token and must set:
+
+   ```bash
+   export AAP_USERNAME="admin"
+   export AAP_PASSWORD="your-controller-password"
+   export KAFKA_BOOTSTRAP_SERVERS="kafka-bootstrap:9092"
+   export CONTROL_PLANE_API_KEY="demo-token"
+   export PLAYBOOK_GENERATION_KAFKA_TOPIC="aiops-ansible-playbook-generate-instruction"
    ```
 
 ## Getting Your API Token

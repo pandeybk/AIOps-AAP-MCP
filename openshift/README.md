@@ -65,8 +65,27 @@ with default values
                  -   `EDA_URL: https://<your-aap-server>/api/eda/v1`
                  -   `EDA_TOKEN`
 
+    3. Deploy the Kafka playbook bridge
 
-    3. Deploy LLamaStack 
+          - Navigate to the `openshift` directory in your terminal.
+          - Apply the bridge resources:
+
+                oc apply -k playbook-bridge
+
+          - Update the `aap-playbook-bridge-secrets` Secret with the required integration values:
+
+                - `AAP_URL` or your controller API URL
+                - `AAP_USERNAME`
+                - `AAP_PASSWORD`
+                - `CONTROL_PLANE_API_KEY`
+                - `KAFKA_BOOTSTRAP_SERVERS`
+                - `PLAYBOOK_GENERATION_KAFKA_TOPIC`
+                - `LIGHTSPEED_TEMPLATE_NAME`
+
+          - The worker listens for plain-text instructions on Kafka, launches the Lightspeed generation template in AAP, and posts either a `generated` or `failed` callback to the control plane URL embedded in each message.
+
+
+    4. Deploy LLamaStack 
 
     
          1.  **Verify Pod Status**: Before you begin, ensure that the `aap-mcp` pod is up and in a `Running` state.
@@ -87,7 +106,7 @@ with default values
                 -   Obtain a token from your MaaS (Model as a Service) by visiting the provided URL.
                 -   Update the token for the `llama-3b` model within the `llama-secret` file.
            
-    4. Deploy Streamlit (LLamaStack UI)
+    5. Deploy Streamlit (LLamaStack UI)
 
     
          1.  **Verify Pod Status**: Before you begin, ensure that the `llamastack-deployment` pod is up and in a `Running` state.

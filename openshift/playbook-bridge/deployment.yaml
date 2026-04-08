@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aap-playbook-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aap-playbook-bridge
+  template:
+    metadata:
+      labels:
+        app: aap-playbook-bridge
+    spec:
+      containers:
+      - name: aap-playbook-bridge
+        image: quay.io/pandeybk/aap-mcp-server:latest
+        imagePullPolicy: Always
+        command:
+        - python
+        - playbook_bridge.py
+        envFrom:
+        - secretRef:
+            name: aap-playbook-bridge-secrets

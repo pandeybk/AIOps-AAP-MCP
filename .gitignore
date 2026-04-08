@@ -6,3 +6,8 @@ openshift/llama-stack/original-llama-secret.yaml
 
 # Ignore Tavily Secrets File
 openshift/streamlit/original_tavily_secret.yaml
+
+# Ignore local Python test artifacts
+__pycache__/
+.hypothesis/
+.pytest_cache/

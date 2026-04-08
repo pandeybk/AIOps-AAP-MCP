@@ -9,6 +9,11 @@ This project demonstrates an **end-to-end AIOps automation framework** built usi
 
 The solution automates detection, analysis, notification, and remediation of node/service failures (e.g., HTTP service downtime).
 
+### Kafka Playbook Bridge
+
+This fork also includes a Kafka-driven playbook bridge for external incident platforms.
+It consumes plain-text instructions from the `aiops-ansible-playbook-generate-instruction` topic, runs the Ansible Lightspeed generation template in AAP, and posts the generated playbook YAML back to the requesting control plane callback URL.
+
 ---
 
 ## ⚙️ Workflow
